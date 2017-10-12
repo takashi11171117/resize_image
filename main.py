@@ -2,23 +2,30 @@ from PIL import Image
 import os
 import glob
 import imghdr
-import traceback
-from memory_profiler import profile
 from tqdm import tqdm
 Image.LOAD_TRUNCATED_IMAGES = True
 
 
 class ResizeImage:
-    @profile
     def __init__(self, nowdir, img_dirname, dist_dirname):
-        org_dir = nowdir + '/' + img_dirname
-        self.imglen = len(self.get_image_list(org_dir))
-        self.dist_dir = org_dir.replace(img_dirname, dist_dirname)
+        self.img_dirname = img_dirname
+        self.dist_dirname = dist_dirname
+        self.org_dir = nowdir + '/' + img_dirname
+        self.dist_dir = self.org_dir.replace(img_dirname, dist_dirname)
+        self.pb = None
+
+    def fire(self):
+        self.imglen = len(self.get_image_list(self.org_dir))
+        self.progress()
+        self.resize_roop(self.org_dir)
+
+    def progress(self):
         self.pb = tqdm(total=self.imglen)
-        self.resize_roop(org_dir)
 
     def resize_image(self, width, filename, org_dir, dist_dir):
         img = Image.open(org_dir + filename, 'r')
+        if img.format == 'GIF':
+            return
         if img.size[0] > width:
             after_width = width
         else:
@@ -47,7 +54,7 @@ class ResizeImage:
         filelist = self.get_filelist(dirc)
         dirchildlist = self.get_dirlist(dirc)
         if not len(filelist) == 0:
-            dist_dir = dirc.replace(img_dirname, dist_dirname)
+            dist_dir = dirc.replace(self.img_dirname, self.dist_dirname)
             if not os.path.exists(self.dist_dir):
                 os.mkdir(self.dist_dir + '/')
             if not os.path.exists(dist_dir):
@@ -59,7 +66,9 @@ class ResizeImage:
                     # print(str(self.count) + '/' + str(self.imglen)
                     #       + '  done: ' + dirc + '/' + f)
                     # self.pb.set_description("Processing %s" % f)
-                    self.pb.update(1)
+                    if(self.pb is not None):
+                        self.pb.update(1)
+
         if not len(dirchildlist) == 0:
             for d in dirchildlist:
                 self.resize_roop(d)
@@ -80,3 +89,4 @@ if __name__ == '__main__':
     img_dirname = '2012'
     dist_dirname = '2012'
     ri = ResizeImage(nowdir, img_dirname, dist_dirname)
+    ri.fire()
