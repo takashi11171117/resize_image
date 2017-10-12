@@ -1,0 +1,8 @@
+memory-profiler==0.47
+olefile==0.44
+Pillow==4.3.0
+progressbar2==3.34.3
+psutil==5.3.1
+python-utils==2.2.0
+six==1.11.0
+tqdm==4.19.1.post1
